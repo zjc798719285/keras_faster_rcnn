@@ -77,8 +77,8 @@ else:
 	# set the path to weights based on backend and model
 	C.base_net_weights = nn.get_weight_path()
 
-train_path = 'F:\zjc\\faster_rcnn_v2\data_txt\\train.txt'
-test_path = 'F:\zjc\\faster_rcnn_v2\data_txt\\test.txt'
+train_path = 'F:\zjc\keras_faster_rcnn\data_txt\\train.txt'
+test_path = 'F:\zjc\keras_faster_rcnn\data_txt\\test.txt'
 all_imgs, classes_count, class_mapping = get_data_v2(train_path=train_path,
 													 test_path=train_path)
 
