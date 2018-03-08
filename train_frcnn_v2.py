@@ -111,8 +111,12 @@ print('Num train samples {}'.format(len(train_imgs)))
 print('Num val samples {}'.format(len(val_imgs)))
 
 
-data_gen_train = data_generators_v2.get_anchor_gt(train_imgs, classes_count, C, nn.get_img_output_length, K.image_dim_ordering(), mode='train')
-data_gen_val = data_generators_v2.get_anchor_gt(val_imgs, classes_count, C, nn.get_img_output_length, K.image_dim_ordering(),  mode='val')
+data_gen_train = data_generators_v2.get_anchor_gt(train_imgs, classes_count,
+												  C, nn.get_img_output_length,
+												  K.image_dim_ordering(), mode='train')
+data_gen_val = data_generators_v2.get_anchor_gt(val_imgs, classes_count,
+												C, nn.get_img_output_length,
+												K.image_dim_ordering(),  mode='val')
 
 if K.image_dim_ordering() == 'th':
 	input_shape_img = (3, None, None)
@@ -129,7 +133,9 @@ shared_layers = nn.nn_base(img_input, trainable=True)  #用一个函数输出bas
 num_anchors = len(C.anchor_box_scales) * len(C.anchor_box_ratios)  #一个位置生成多少个anchors
 rpn = nn.rpn(shared_layers, num_anchors)
 
-classifier = nn.classifier(shared_layers, roi_input, C.num_rois, nb_classes=len(classes_count), trainable=True)
+classifier = nn.classifier(shared_layers, roi_input, C.num_rois,
+						   nb_classes=len(classes_count),
+						   trainable=True)
 
 model_rpn = Model(img_input, rpn[:2])
 model_classifier = Model([img_input, roi_input], classifier)
@@ -147,8 +153,11 @@ except:
 
 optimizer = Adam(lr=1e-5)
 optimizer_classifier = Adam(lr=1e-5)
-model_rpn.compile(optimizer=optimizer, loss=[losses.rpn_loss_cls(num_anchors), losses.rpn_loss_regr(num_anchors)])
-model_classifier.compile(optimizer=optimizer_classifier, loss=[losses.class_loss_cls, losses.class_loss_regr(len(classes_count)-1)], metrics={'dense_class_{}'.format(len(classes_count)): 'accuracy'})
+model_rpn.compile(optimizer=optimizer, loss=[losses.rpn_loss_cls(num_anchors),
+											 losses.rpn_loss_regr(num_anchors)])
+model_classifier.compile(optimizer=optimizer_classifier,
+						 loss=[losses.class_loss_cls, losses.class_loss_regr(len(classes_count)-1)],
+						 metrics={'dense_class_{}'.format(len(classes_count)): 'accuracy'})
 model_all.compile(optimizer='sgd', loss='mae')
 
 epoch_length = 100
@@ -188,7 +197,9 @@ for epoch_num in range(num_epochs):
 
 			P_rpn = model_rpn.predict_on_batch(X)
 
-			R = roi_helpers.rpn_to_roi(P_rpn[0], P_rpn[1], C, K.image_dim_ordering(), use_regr=True, overlap_thresh=0.5, max_boxes=300)
+			R = roi_helpers.rpn_to_roi(P_rpn[0], P_rpn[1], C, K.image_dim_ordering(),
+									   use_regr=True, overlap_thresh=0.3,
+									   max_boxes=300)
 			# note: calc_iou converts from (x1,y1,x2,y2) to (x,y,w,h) format
 			X2, Y1, Y2, IouS = roi_helpers.calc_iou(R, img_data, C, class_mapping)
 
