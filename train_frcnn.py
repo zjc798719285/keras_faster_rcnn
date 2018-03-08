@@ -189,6 +189,7 @@ for epoch_num in range(num_epochs):
 			# note: calc_iou converts from (x1,y1,x2,y2) to (x,y,w,h) format
 			X2, Y1, Y2, IouS = roi_helpers.calc_iou(R, img_data, C, class_mapping)
 
+
 			if X2 is None:
 				rpn_accuracy_rpn_monitor.append(0)
 				rpn_accuracy_for_epoch.append(0)
@@ -241,8 +242,11 @@ for epoch_num in range(num_epochs):
 
 			iter_num += 1
 
-			progbar.update(iter_num, [('rpn_cls', np.mean(losses[:iter_num, 0])), ('rpn_regr', np.mean(losses[:iter_num, 1])),
-									  ('detector_cls', np.mean(losses[:iter_num, 2])), ('detector_regr', np.mean(losses[:iter_num, 3]))])
+			progbar.update(iter_num, [('rpn_cls', IouS,np.mean(losses[:iter_num, 0])),
+									  ('rpn_regr', np.mean(losses[:iter_num, 1])),
+									  ('detector_cls', np.mean(losses[:iter_num, 2])),
+									  ('detector_regr', np.mean(losses[:iter_num, 3]))])
+
 
 			if iter_num == epoch_length:
 				loss_rpn_cls = np.mean(losses[:, 0])

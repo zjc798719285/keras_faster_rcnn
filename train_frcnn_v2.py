@@ -35,7 +35,7 @@ parser.add_option("--config_filename", dest="config_filename", help=
 				default="config.pickle")
 parser.add_option("--output_weight_path", dest="output_weight_path", help="Output path for weights.", default='E:\PROJECT\keras-frcnn\checkpoints\\barefoot\\faster_rcnn_restnet50.hdf5')
 parser.add_option("--input_weight_path", dest="input_weight_path", help="Input path for weights. If not specified, will try to load default weights provided by keras.",
-				  default='E:\PROJECT\keras-frcnn\\resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5')
+				  default='F:\zjc\keras_faster_rcnn\\resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5')
 
 (options, args) = parser.parse_args()
 
@@ -188,7 +188,7 @@ for epoch_num in range(num_epochs):
 
 			P_rpn = model_rpn.predict_on_batch(X)
 
-			R = roi_helpers.rpn_to_roi(P_rpn[0], P_rpn[1], C, K.image_dim_ordering(), use_regr=True, overlap_thresh=0.1, max_boxes=300)
+			R = roi_helpers.rpn_to_roi(P_rpn[0], P_rpn[1], C, K.image_dim_ordering(), use_regr=True, overlap_thresh=0.5, max_boxes=300)
 			# note: calc_iou converts from (x1,y1,x2,y2) to (x,y,w,h) format
 			X2, Y1, Y2, IouS = roi_helpers.calc_iou(R, img_data, C, class_mapping)
 
@@ -244,8 +244,11 @@ for epoch_num in range(num_epochs):
 
 			iter_num += 1
 
-			progbar.update(iter_num, [('rpn_cls', np.mean(losses[:iter_num, 0])), ('rpn_regr', np.mean(losses[:iter_num, 1])),
-									  ('detector_cls', np.mean(losses[:iter_num, 2])), ('detector_regr', np.mean(losses[:iter_num, 3]))])
+			progbar.update(iter_num, [('rpn_cls', np.mean(losses[:iter_num, 0])),
+									  ('rpn_regr', np.mean(losses[:iter_num, 1])),
+									  ('detector_cls', np.mean(losses[:iter_num, 2])),
+									  ('detector_regr', np.mean(losses[:iter_num, 3]))])
+			print('ious',IouS)
 
 			if iter_num == epoch_length:
 				loss_rpn_cls = np.mean(losses[:, 0])
