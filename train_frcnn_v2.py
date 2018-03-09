@@ -33,7 +33,7 @@ parser.add_option("--num_epochs", type="int", dest="num_epochs", help="Number of
 parser.add_option("--config_filename", dest="config_filename", help=
 				"Location to store all the metadata related to the training (to be used when testing).",
 				default="config.pickle")
-parser.add_option("--output_weight_path", dest="output_weight_path", help="Output path for weights.", default='E:\PROJECT\keras-frcnn\checkpoints\\barefoot\\faster_rcnn_restnet50.hdf5')
+parser.add_option("--output_weight_path", dest="output_weight_path", help="Output path for weights.", default='F:\zjc\keras_faster_rcnn\checkpoint\\faster_rcnn_restnet50.hdf5')
 parser.add_option("--input_weight_path", dest="input_weight_path", help="Input path for weights. If not specified, will try to load default weights provided by keras.",
 				  default='F:\zjc\keras_faster_rcnn\\resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5')
 
@@ -84,7 +84,7 @@ all_imgs, classes_count, class_mapping = get_data_v2(train_path=train_path,
 
 if 'bg' not in classes_count:
 	classes_count['bg'] = 0
-	class_mapping['bg'] = len(class_mapping)
+	class_mapping['bg'] = len(class_mapping)#类别映射中加入背景设置为1
 
 C.class_mapping = class_mapping
 
@@ -98,7 +98,8 @@ config_output_filename = options.config_filename
 
 with open(config_output_filename, 'wb') as config_f:
 	pickle.dump(C,config_f)
-	print('Config has been written to {}, and can be loaded when testing to ensure correct results'.format(config_output_filename))
+	print('Config has been written to {}, and can be loaded'
+		  ' when testing to ensure correct results'.format(config_output_filename))
 
 random.shuffle(all_imgs)
 
@@ -142,12 +143,11 @@ model_classifier = Model([img_input, roi_input], classifier)
 
 # this is a model that holds both the RPN and the classifier, used to load/save weights for the models
 model_all = Model([img_input, roi_input], rpn[:2] + classifier)
-
 try:
 	print('loading weights from {}'.format(C.base_net_weights))
 	model_rpn.load_weights(C.base_net_weights, by_name=True)
 	model_classifier.load_weights(C.base_net_weights, by_name=True)
-except:
+except Exception:
 	print('Could not load pretrained model weights. Weights can be found in the keras application folder \
 		https://github.com/fchollet/keras/tree/master/keras/applications')
 
@@ -156,11 +156,11 @@ optimizer_classifier = Adam(lr=1e-5)
 model_rpn.compile(optimizer=optimizer, loss=[losses.rpn_loss_cls(num_anchors),
 											 losses.rpn_loss_regr(num_anchors)])
 model_classifier.compile(optimizer=optimizer_classifier,
-						 loss=[losses.class_loss_cls, losses.class_loss_regr(len(classes_count)-1)],
+						 loss=[losses.class_loss_cls, losses.class_loss_regr(num_classes=1)],   #一共有多少类别，不算背景
 						 metrics={'dense_class_{}'.format(len(classes_count)): 'accuracy'})
 model_all.compile(optimizer='sgd', loss='mae')
 
-epoch_length = 100
+epoch_length = 5
 num_epochs = int(options.num_epochs)
 iter_num = 0
 
@@ -182,7 +182,7 @@ for epoch_num in range(num_epochs):
 	print('Epoch {}/{}'.format(epoch_num + 1, num_epochs))
 
 	while True:
-		try:
+		# try:
 
 			if len(rpn_accuracy_rpn_monitor) == epoch_length and C.verbose:
 				mean_overlapping_bboxes = float(sum(rpn_accuracy_rpn_monitor))/len(rpn_accuracy_rpn_monitor)
@@ -192,13 +192,14 @@ for epoch_num in range(num_epochs):
 					print('RPN is not producing bounding boxes that overlap the ground truth boxes. Check RPN settings or keep training.')
 
 			X, Y, img_data = next(data_gen_train)
+			# print('Y=', np.shape(Y))
 
 			loss_rpn = model_rpn.train_on_batch(X, Y)
 
 			P_rpn = model_rpn.predict_on_batch(X)
 
 			R = roi_helpers.rpn_to_roi(P_rpn[0], P_rpn[1], C, K.image_dim_ordering(),
-									   use_regr=True, overlap_thresh=0.3,
+									   use_regr=True, overlap_thresh=0.1,
 									   max_boxes=300)
 			# note: calc_iou converts from (x1,y1,x2,y2) to (x,y,w,h) format
 			X2, Y1, Y2, IouS = roi_helpers.calc_iou(R, img_data, C, class_mapping)
@@ -244,7 +245,7 @@ for epoch_num in range(num_epochs):
 				else:
 					sel_samples = random.choice(pos_samples)
 
-			loss_class = model_classifier.train_on_batch([X, X2[:, sel_samples, :]], [Y1[:, sel_samples, :], Y2[:, sel_samples, :]])
+			loss_class = model_classifier.train_on_batch([X, X2[:, sel_samples, :]], [Y1[:, sel_samples, :], Y2[:, sel_samples, :]]);print('y_trure=', np.shape(Y2[:, sel_samples, :]))
 
 			losses[iter_num, 0] = loss_rpn[1]
 			losses[iter_num, 1] = loss_rpn[2]
@@ -291,10 +292,10 @@ for epoch_num in range(num_epochs):
 						print('Total loss decreased from {} to {}, saving weights'.format(best_loss,curr_loss))
 
 
-				break
+				# break
 
-		except Exception as e:
-			print('Exception: {}'.format(e))
-			continue
+		# except Exception as e:
+		# 	print('Exception: {}'.format(e))
+		# 	continue
 
 print('Training complete, exiting.')

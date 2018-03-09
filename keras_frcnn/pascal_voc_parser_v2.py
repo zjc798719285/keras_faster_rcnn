@@ -12,7 +12,7 @@ def get_box(path, img_width, img_height):
 def get_data_v2(train_path,test_path):
  all_imgs = []
  classes_count={'Foot':0}
- class_mapping={'Foot':1}
+ class_mapping={'Foot':0}
  f_train = open(train_path)
  train_lines = f_train.readlines()
  f_test = open(test_path)

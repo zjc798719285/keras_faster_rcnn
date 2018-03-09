@@ -1,5 +1,6 @@
 from keras import backend as K
 from keras.objectives import categorical_crossentropy
+import numpy as np
 
 if K.image_dim_ordering() == 'tf':
 	import tensorflow as tf
@@ -44,6 +45,7 @@ def rpn_loss_cls(num_anchors):
 
 def class_loss_regr(num_classes):
 	def class_loss_regr_fixed_num(y_true, y_pred):
+		# print('*********',np.shape(y_true))
 		x = y_true[:, :, 4*num_classes:] - y_pred
 		x_abs = K.abs(x)
 		x_bool = K.cast(K.less_equal(x_abs, 1.0), 'float32')

@@ -225,7 +225,7 @@ def rpn(base_layers,num_anchors):
 
     return [x_class, x_regr, base_layers]
 
-def classifier(base_layers, input_rois, num_rois, nb_classes = 21, trainable=False):
+def classifier(base_layers, input_rois, num_rois, nb_classes = 2, trainable=False): #算上背景一共两类
 
     # compile times on theano tend to be very high, so we use smaller ROI pooling regions to workaround
 
